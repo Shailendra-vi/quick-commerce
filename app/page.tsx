@@ -1,28 +1,41 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import Delivery from "@/components/Delivery";
+import Customer from "@/components/Customer";
 
 export default function Home() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [transport, setTransport] = useState("N/A");
-  const { token } = useAuth();
   const router = useRouter();
+  const { user, token, setUser } = useAuth();
 
   useEffect(() => {
     if (!token) {
       router.push("/signin");
-    } else {
-      router.push("/dashboard");
+      return;
     }
-  }, [token, router]);
+    if (token && !user) {
+      fetchUserRole();
+      return;
+    }
 
+    async function fetchUserRole() {
+      const res = await fetch("/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        const user = await res.json();
+        setUser(user);
+      } else {
+        router.push("/signin");
+      }
+    }
+  }, []);
 
-  return token ? (
-    <div>
-      <p>Status: {isConnected ? "connected" : "disconnected"}</p>
-      <p>Transport: {transport}</p>
-    </div>
-  ) : null;
+  if (!user || !user.role) return <div>Loading...</div>;
+
+  return user.role === "customer" ? <Customer /> : <Delivery />;
 }

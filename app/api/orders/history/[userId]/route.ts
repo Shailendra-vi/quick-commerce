@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const { userId } = await params;
-    const user = User.findById(userId);
+    const user = await User.findById(userId);
 
     if (!user) {
       return NextResponse.json(
@@ -17,10 +17,18 @@ export async function GET(
       );
     }
 
-    const orders = await Orders.find({
-      customerId: userId,
-    });
-    
+    let orders;
+    if (user.role === "customer") {
+      orders = await Orders.find({
+        customerId: userId,
+        status: "Delivered",
+      });
+    } else {
+      orders = await Orders.find({
+        deliveryPartnerId: userId,
+        status: "Delivered",
+      });
+    }
 
     return NextResponse.json(orders, { status: 200 });
   } catch (error) {

@@ -29,7 +29,7 @@ export async function GET(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    let orders = await Orders.find({ customerId: id }).sort({ createdAt: -1 });
+    let orders = await Orders.find({ customerId: id, status: { $ne: "Delivered" } }).sort({ createdAt: -1 });
 
     return NextResponse.json(orders, { status: 200 });
   } catch (error) {

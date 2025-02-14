@@ -1,9 +1,20 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { verifyToken } from "@/utils/auth";
 import { User } from "@/types/type";
+import {
+  Box,
+  Button,
+  Container,
+  TextField,
+  Typography,
+  MenuItem,
+  Alert,
+  CircularProgress,
+  Paper,
+} from "@mui/material";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -15,13 +26,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-  const { token, setToken, setUser } = useAuth();
-
-  useEffect(() => {
-    if (token) {
-      router.push("/dashboard");
-    }
-  }, [token]);
+  const { setToken, setUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,8 +49,7 @@ export default function SignupPage() {
       setToken(data.token);
       const user = verifyToken(data.token) as User;
       setUser(user);
-
-      router.push("/dashboard");
+      router.push("/");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -54,102 +58,79 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
-        <h2 className="text-3xl font-bold text-center text-gray-900">
+    <Container component="main" maxWidth="xs">
+      <Paper elevation={3} sx={{ p: 4, mt: 8, borderRadius: 2 }}>
+        <Typography variant="h4" align="center" gutterBottom>
           Sign Up
-        </h2>
-        {error && <p className="text-red-500 text-center">{error}</p>}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="role"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Role
-              </label>
-              <select
-                id="role"
-                name="role"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                value={formData.role}
-                onChange={(e) =>
-                  setFormData({ ...formData, role: e.target.value })
-                }
-              >
-                <option value="customer">Customer</option>
-                <option value="delivery">Delivery</option>
-              </select>
-            </div>
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400"
+        </Typography>
+        {error && <Alert severity="error">{error}</Alert>}
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+          <TextField
+            fullWidth
+            label="Name"
+            variant="outlined"
+            margin="normal"
+            required
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            label="Email"
+            type="email"
+            variant="outlined"
+            margin="normal"
+            required
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            variant="outlined"
+            margin="normal"
+            required
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            select
+            label="Role"
+            variant="outlined"
+            margin="normal"
+            required
+            value={formData.role}
+            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
           >
-            {loading ? "Creating account..." : "Sign Up"}
-          </button>
-        </form>
-      </div>
-    </div>
+            <MenuItem value="customer">Customer</MenuItem>
+            <MenuItem value="delivery">Delivery</MenuItem>
+          </TextField>
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            color="primary"
+            sx={{ mt: 2, py: 1.5 }}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Sign Up"}
+          </Button>
+          <Typography align="center" sx={{ mt: 2 }}>
+            Already have an account?
+          </Typography>
+          <Button
+            fullWidth
+            variant="outlined"
+            color="primary"
+            sx={{ mt: 1, py: 1.5 }}
+            onClick={() => router.push("/signin")}
+          >
+            Sign In
+          </Button>
+        </Box>
+      </Paper>
+    </Container>
   );
 }

@@ -5,6 +5,19 @@ import { useProducts } from "@/context/ProductsContext";
 import { Order } from "@/types/type";
 import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  Container,
+  Grid,
+} from "@mui/material";
+import { toast } from "react-toastify";
+import CompletedOrders from "./CompletedOrders";
 
 const socket = io();
 
@@ -18,8 +31,8 @@ function Delivery() {
     useProducts();
   const { token, user } = useAuth();
   const [newProduct, setNewProduct] = useState({ name: "", price: "" });
-
-  const [orders, setOrders] = useState<Order[] | []>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [showOrderHistory, setShowOrderHistory] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -30,7 +43,11 @@ function Delivery() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch(`/api/orders/${user?._id}`);
+      const response = await fetch(`/api/orders/pending`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = await response.json();
       setOrders(data);
     } catch (error) {
@@ -39,7 +56,7 @@ function Delivery() {
   };
 
   useEffect(() => {
-    if (user && socket && socket.connected) {
+    if (user && socket.connected) {
       socket.emit("joinRoom", user?._id);
       socket.on("newOrder", (newOrder) => {
         setOrders((prev) => [...prev, newOrder]);
@@ -51,7 +68,7 @@ function Delivery() {
     return () => {
       socket.off("newOrder");
     };
-  }, [user, socket]);
+  }, [user]);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
@@ -69,9 +86,10 @@ function Delivery() {
             order._id === orderId ? { ...order, status: newStatus } : order
           )
         );
+        toast.success("Order status updated!");
       }
     } catch (error) {
-      console.error("Error updating order status:", error);
+      toast.error("Error updating order status");
     }
   };
 
@@ -82,98 +100,117 @@ function Delivery() {
     setNewProduct({ name: "", price: "" });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setNewProduct((prev: NewProduct) => ({ ...prev, [name]: value }));
-  };
-
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold text-center mb-6">
-        Products Dashboard
-      </h1>
-
-      {/* Add Product Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="mb-6 p-6 border rounded-lg shadow-lg bg-white flex flex-col gap-4"
-      >
-        <input
-          type="text"
-          name="name"
-          placeholder="Product Name"
-          value={newProduct.name}
-          onChange={handleChange}
-          className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-        />
-        <input
-          type="number"
-          name="price"
-          placeholder="Product Price"
-          value={newProduct.price}
-          onChange={handleChange}
-          className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-        />
-        <button
-          type="submit"
-          className="bg-green-500 text-white py-2 rounded-md disabled:bg-gray-400"
-          disabled={loading}
-        >
-          {loading ? "Adding..." : "Add Product"}
-        </button>
-      </form>
-
-      {/* Product List */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {products?.map((product) => (
-          <div
-            key={product._id}
-            className="p-4 border rounded-lg shadow-lg bg-white flex flex-col gap-2"
+    <Container maxWidth="lg" className="py-8">
+      {showOrderHistory ? (
+        <CompletedOrders onClose={() => setShowOrderHistory(false)} />
+      ) : (
+        <>
+          <Button
+            fullWidth
+            variant="contained"
+            color="secondary"
+            onClick={() => setShowOrderHistory(true)}
           >
-            <h2 className="text-lg font-semibold">{product.name}</h2>
-            <p className="text-gray-600">${product.price}</p>
-            <button
-              onClick={async () => await deleteProduct(product._id)}
-              className="bg-red-500 text-white flex items-center gap-2 px-3 py-1 mt-2 rounded-md"
+            View Order History
+          </Button>
+          <Typography variant="h4" align="center" gutterBottom>
+            Products Dashboard
+          </Typography>
+          <form
+            onSubmit={handleSubmit}
+            className="mb-6 flex flex-col gap-4 p-6 bg-white shadow-md rounded-lg"
+          >
+            <TextField
+              label="Product Name"
+              name="name"
+              value={newProduct.name}
+              onChange={(e) =>
+                setNewProduct({ ...newProduct, name: e.target.value })
+              }
+              fullWidth
+            />
+            <TextField
+              label="Product Price"
+              name="price"
+              type="number"
+              value={newProduct.price}
+              onChange={(e) =>
+                setNewProduct({ ...newProduct, price: e.target.value })
+              }
+              fullWidth
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={loading}
             >
-              Delete
-            </button>
-          </div>
-        ))}
-      </div>
+              {loading ? "Adding..." : "Add Product"}
+            </Button>
+          </form>
 
-      {/* Orders Section */}
-      <h2 className="text-2xl font-bold text-center my-6">Customer Orders</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {orders.length > 0 ? (
-          orders.map((order) => (
-            <div
-              key={order._id}
-              className="p-4 border rounded-lg shadow-lg bg-white flex flex-col gap-3"
-            >
-              <h3 className="text-lg font-semibold">Order #{order._id}</h3>
-              {/* <p className="text-gray-700">Customer: {order.customerName}</p>
-              <p className="text-gray-700">Total: ${order.totalPrice}</p> */}
-              <p className="text-gray-700">Status: {order.status}</p>
-              <select
-                className="p-2 border rounded-md"
-                value={order.status}
-                onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-              >
-                <option value="Pending">Pending</option>
-                <option value="Accepted">Accepted</option>
-                <option value="Out for Delivery">Out for Delivery</option>
-                <option value="Delivered">Delivered</option>
-              </select>
-            </div>
-          ))
-        ) : (
-          <p className="text-gray-600 text-center col-span-full">
-            No orders found.
-          </p>
-        )}
-      </div>
-    </div>
+          <Grid container spacing={3}>
+            {products?.map((product) => (
+              <Grid item xs={12} sm={6} md={4} key={product._id}>
+                <Card className="shadow-md">
+                  <CardContent>
+                    <Typography variant="h6">{product.name}</Typography>
+                    <Typography color="textSecondary">
+                      ${product.price}
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={async () => await deleteProduct(product._id)}
+                      className="mt-2"
+                    >
+                      Delete
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+
+          <Typography variant="h4" align="center" gutterBottom className="mt-8">
+            Customer Orders
+          </Typography>
+          <Grid container spacing={3}>
+            {orders.length > 0 ? (
+              orders.map((order) => (
+                <Grid item xs={12} sm={6} md={4} key={order._id}>
+                  <Card className="shadow-md">
+                    <CardContent>
+                      <Typography variant="h6">Order #{order._id}</Typography>
+                      <Typography>Status: {order.status}</Typography>
+                      <Select
+                        fullWidth
+                        value={order.status}
+                        onChange={(e) =>
+                          updateOrderStatus(order._id, e.target.value)
+                        }
+                      >
+                        <MenuItem value="Pending">Pending</MenuItem>
+                        <MenuItem value="Accepted">Accepted</MenuItem>
+                        <MenuItem value="Out for Delivery">
+                          Out for Delivery
+                        </MenuItem>
+                        <MenuItem value="Delivered">Delivered</MenuItem>
+                      </Select>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))
+            ) : (
+              <Typography align="center" className="text-gray-600 w-full">
+                No orders found.
+              </Typography>
+            )}
+          </Grid>
+        </>
+      )}
+    </Container>
   );
 }
 
