@@ -23,7 +23,7 @@ export default function SigninPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-  const { setToken, setUser } = useAuth();
+  const { setToken } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,9 +45,6 @@ export default function SigninPage() {
       }
 
       setToken(data.token);
-      const user = decodeToken(data.token) as User | null;
-      setUser(user);
-
       router.push("/");
     } catch (err: any) {
       setError(err.message);

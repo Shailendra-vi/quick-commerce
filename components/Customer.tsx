@@ -133,7 +133,6 @@ const Customer = () => {
     setPage(value);
   };
 
-
   if (loading)
     return (
       <Box display="flex" justifyContent="center" mt={10}>
@@ -145,15 +144,7 @@ const Customer = () => {
     <Container maxWidth="xl" sx={{ py: 8 }}>
       <div className="flex gap-5">
         <div className="flex-[3]">
-          <Button
-            fullWidth
-            variant="contained"
-            color="secondary"
-            onClick={() => router.push("/history")}
-          >
-            View Order History
-          </Button>
-          <Paper elevation={3} sx={{ p: 4, borderRadius: 3, mt: 4 }}>
+          <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
             <Typography
               variant="h4"
               fontWeight="bold"
@@ -223,20 +214,22 @@ const Customer = () => {
           sx={{ p: 4, borderRadius: 3 }}
           className="flex-[1]"
         >
-          <Typography
-            variant="h4"
-            fontWeight="bold"
-            textAlign="center"
-            gutterBottom
+          <Button
+            fullWidth
+            variant="contained"
+            color="secondary"
+            onClick={() => router.push("/history")}
           >
-            Order Status
-          </Typography>
-          <Grid container spacing={3}>
+            View Past Orders
+          </Button>
+          <Grid container spacing={3} className="mt-4">
             {orderHistory?.map((order) => (
               <Grid item xs={12} key={order._id}>
                 <Card elevation={4} sx={{ borderRadius: 2 }} className="h-full">
                   <CardContent className="h-full flex flex-col justify-between">
-                    <Typography variant="h6">Order #{order._id}</Typography>
+                    <Typography variant="h6">
+                      Order #{order._id.slice(-6).toUpperCase()}
+                    </Typography>
                     <Typography>
                       {order.productId.name} - ${order.productId.price}
                     </Typography>
@@ -248,6 +241,15 @@ const Customer = () => {
                         statusColors[order.status as keyof typeof statusColors]
                       }
                     />
+                    {order.status !== "Delivered" && (
+                      <Button
+                        fullWidth
+                        color="primary"
+                        onClick={() => cancelOrder(order._id)}
+                      >
+                        Cancel
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               </Grid>

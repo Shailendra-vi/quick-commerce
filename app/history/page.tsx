@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 const CustomerOrderHistory = () => {
   const { user, token } = useAuth();
   const [orderHistory, setOrderHistory] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -32,6 +32,7 @@ const CustomerOrderHistory = () => {
 
   const getPastOrders = async () => {
     try {
+      setLoading(true);
       const response = await fetch(`/api/orders/history/${user?._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -75,6 +76,19 @@ const CustomerOrderHistory = () => {
                     <Box
                       sx={{ display: "flex", flexDirection: "column", gap: 1 }}
                     >
+                      <Typography variant="body1">
+                        {order.productId.name} - ${order.productId.price}
+                      </Typography>
+                      {user?.role !== "customer" && (
+                        <>
+                          <Typography variant="body1">
+                            {order.customerId.name}
+                          </Typography>
+                          <Typography variant="body1">
+                            {order.customerId.email}
+                          </Typography>
+                        </>
+                      )}
                       <Typography variant="body1">
                         Quantity: {order.quantity}
                       </Typography>

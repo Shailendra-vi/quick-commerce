@@ -125,22 +125,17 @@ function Delivery() {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 8 }}>
       <div className="flex gap-5">
         <div className="flex-[3]">
-          <Button
-            fullWidth
-            variant="contained"
-            color="secondary"
-            sx={{ mb: 3 }}
-            onClick={() => router.push("/history")}
-          >
-            View Order History
-          </Button>
-
           <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
-            <Typography variant="h4" align="center" gutterBottom>
-              Products Dashboard
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              textAlign="center"
+              gutterBottom
+            >
+              New Product
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <form onSubmit={handleSubmit}>
@@ -219,29 +214,37 @@ function Delivery() {
             ))}
           </Grid>
         </div>
-
-        <div className="flex-[1]">
+        <Paper
+          elevation={3}
+          sx={{ p: 4, borderRadius: 3 }}
+          className="flex-[1]"
+        >
           {loadingOrders ? (
             <Box display="flex" justifyContent="center" py={3}>
               <CircularProgress />
             </Box>
           ) : (
             <>
-              <Typography
-                variant="h4"
-                align="center"
-                gutterBottom
+              <Button
+                fullWidth
+                variant="contained"
+                color="secondary"
+                onClick={() => router.push("/history")}
               >
-                Pending Orders
-              </Typography>
-              <Grid container spacing={3}>
+                View Order History
+              </Button>
+              <Grid container spacing={3} className="mt-4">
                 {orders.length > 0 ? (
                   orders.map((order) => (
                     <Grid item xs={12} key={order._id}>
-                      <Card elevation={4} sx={{ borderRadius: 2 }} className="h-full">
+                      <Card
+                        elevation={4}
+                        sx={{ borderRadius: 2 }}
+                        className="h-full"
+                      >
                         <CardContent className="h-full flex flex-col justify-between">
                           <Typography variant="h6">
-                            Order #{order._id}
+                            Order #{order._id.slice(-6).toUpperCase()}
                           </Typography>
                           <Typography>{order.customerId.name}</Typography>
                           <Typography>{order.customerId.email}</Typography>
@@ -276,7 +279,7 @@ function Delivery() {
               </Grid>
             </>
           )}
-        </div>
+        </Paper>
       </div>
     </Container>
   );

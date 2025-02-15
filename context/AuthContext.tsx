@@ -23,10 +23,30 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (token) {
       localStorage.setItem("token", token);
+      fetchUserRole();
     } else {
       localStorage.removeItem("token");
+      setUser(null)
     }
   }, [token]);
+
+  async function fetchUserRole() {
+    try {
+      const res = await fetch("/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        const user = await res.json();
+        setUser(user);
+      } else {
+        router.push("/signin");
+      }
+    } catch (error) {
+      console.log((error as Error).message);
+    }
+  }
 
   const logout = () => {
     setUser(null);
