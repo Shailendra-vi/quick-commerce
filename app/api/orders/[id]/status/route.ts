@@ -34,7 +34,7 @@ export async function PUT(
   
       await connectToDatabase();
   
-      const order = await Orders.findById(id);
+      const order = await Orders.findById(id).populate("customerId", "name email").populate("productId", "name price");
       if (!order) {
         return NextResponse.json({ message: "Order not found" }, { status: 404 });
       }
@@ -46,9 +46,9 @@ export async function PUT(
   
       order.status = status;
       await order.save();
-  
+      
       const io: SocketIOServer = getIo();
-      io.to(order.customerId.toString()).emit("orderUpdate", order);
+      io.to(order.customerId._id.toString()).emit("orderUpdate", order);
   
       return NextResponse.json(
         { message: "Order status updated successfully", order },

@@ -17,28 +17,39 @@ import {
   CircularProgress,
   Box,
   Paper,
+  Chip,
+  Pagination,
 } from "@mui/material";
 import { toast } from "react-toastify";
-import CustomerOrderHistory from "./CustomerOrderHistory";
+import { useRouter } from "next/navigation";
 
 const socket = io();
 
+const statusColors: {
+  [key: string]: "warning" | "info" | "primary" | "success";
+} = {
+  Pending: "warning",
+  Accepted: "info",
+  "Out for delivery": "primary",
+  Delivered: "success",
+};
+
 const Customer = () => {
-  const { loading, products, fetchProducts } = useProducts();
+  const { loading, products, totalPages, fetchProducts } = useProducts();
   const { token, user } = useAuth();
   const [orderDetails, setOrderDetails] = useState<{ [key: string]: number }>(
     {}
   );
   const [location, setLocation] = useState("");
   const [orderHistory, setOrderHistory] = useState<Order[]>([]);
-
-  const [showOrderHistory, setShowOrderHistory] = useState(false);
+  const [page, setPage] = useState(1);
+  const router = useRouter();
 
   useEffect(() => {
-    if (token && !products) {
-      fetchProducts();
+    if (token) {
+      fetchProducts(page);
     }
-  }, [token]);
+  }, [token, page]);
 
   useEffect(() => {
     if (user) {
@@ -64,9 +75,11 @@ const Customer = () => {
 
   const fetchHistory = async () => {
     try {
-      const response = await fetch(`/api/orders/customer/${user?._id}`);
+      const response = await fetch(`/api/orders/customer/${user?._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
-      if (response.ok) setOrderHistory(data);
+      if (response.ok) setOrderHistory(data.orders || []);
     } catch (error) {
       console.error(error);
     }
@@ -113,6 +126,13 @@ const Customer = () => {
       toast.error("Error canceling order. Please try again.");
     }
   };
+  const handlePageChange = (
+    event: React.ChangeEvent<unknown>,
+    value: number
+  ) => {
+    setPage(value);
+  };
+
 
   if (loading)
     return (
@@ -122,22 +142,18 @@ const Customer = () => {
     );
 
   return (
-    <Container maxWidth="lg" sx={{ py: 8 }}>
-      {showOrderHistory ? (
-        <CustomerOrderHistory
-          onClose={async () => setShowOrderHistory(false)}
-        />
-      ) : (
-        <>
+    <Container maxWidth="xl" sx={{ py: 8 }}>
+      <div className="flex gap-5">
+        <div className="flex-[3]">
           <Button
             fullWidth
             variant="contained"
             color="secondary"
-            onClick={() => setShowOrderHistory(true)}
+            onClick={() => router.push("/history")}
           >
             View Order History
           </Button>
-          <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+          <Paper elevation={3} sx={{ p: 4, borderRadius: 3, mt: 4 }}>
             <Typography
               variant="h4"
               fontWeight="bold"
@@ -191,56 +207,54 @@ const Customer = () => {
                   </Card>
                 </Grid>
               ))}
+              <Box display="flex" justifyContent="center" mt={4}>
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                />
+              </Box>
             </Grid>
           </Paper>
-          <Paper elevation={3} sx={{ p: 4, borderRadius: 3, mt: 6 }}>
-            <Typography
-              variant="h4"
-              fontWeight="bold"
-              textAlign="center"
-              gutterBottom
-            >
-              Order History
-            </Typography>
-            <Grid container spacing={3}>
-              {orderHistory?.map((order) => (
-                <Grid item xs={12} key={order._id}>
-                  <Card elevation={4} sx={{ borderRadius: 2 }}>
-                    <CardContent>
-                      <Typography variant="h6" fontWeight="bold">
-                        Order ID: {order._id}
-                      </Typography>
-                      <Typography>Quantity: {order.quantity}</Typography>
-                      <Typography>Location: {order.location}</Typography>
-                      <Typography
-                        color={
-                          order.status === "Pending"
-                            ? "warning.main"
-                            : "success.main"
-                        }
-                      >
-                        Status: {order.status}
-                      </Typography>
-                    </CardContent>
-                    {order.status === "Pending" && (
-                      <CardActions>
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          color="error"
-                          onClick={() => cancelOrder(order._id)}
-                        >
-                          Cancel Order
-                        </Button>
-                      </CardActions>
-                    )}
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Paper>{" "}
-        </>
-      )}
+        </div>
+        <Paper
+          elevation={3}
+          sx={{ p: 4, borderRadius: 3 }}
+          className="flex-[1]"
+        >
+          <Typography
+            variant="h4"
+            fontWeight="bold"
+            textAlign="center"
+            gutterBottom
+          >
+            Order Status
+          </Typography>
+          <Grid container spacing={3}>
+            {orderHistory?.map((order) => (
+              <Grid item xs={12} key={order._id}>
+                <Card elevation={4} sx={{ borderRadius: 2 }} className="h-full">
+                  <CardContent className="h-full flex flex-col justify-between">
+                    <Typography variant="h6">Order #{order._id}</Typography>
+                    <Typography>
+                      {order.productId.name} - ${order.productId.price}
+                    </Typography>
+                    <Typography>Quantity: {order.quantity}</Typography>
+                    <Typography>Location: {order.location}</Typography>
+                    <Chip
+                      label={order.status}
+                      color={
+                        statusColors[order.status as keyof typeof statusColors]
+                      }
+                    />
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Paper>
+      </div>
     </Container>
   );
 };

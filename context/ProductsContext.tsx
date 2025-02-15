@@ -16,21 +16,22 @@ const ProductsContext = createContext<ProductContext | undefined>(undefined);
 export const ProductsProvider = ({ children }: { children: ReactNode }) => {
   const [products, setProducts] = useState<Product[] | undefined>();
   const [loading, setLoading] = useState<boolean>(false);
+  const [totalPages, setTotalPages] = useState<number>(1);
+
   const { token } = useAuth();
 
   const router = useRouter();
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (page = 1) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/products`, {
+      const response = await fetch(`/api/products?page=${page}`, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
       setProducts(data.products);
+      setTotalPages(data.totalPages);
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
@@ -38,7 +39,7 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const addProduct = async (name: string, price: Number) => {
+  const addProduct = async (name: string, price: Number, category: string) => {
     if (!token) {
       router.push("/signin");
       return;
@@ -51,7 +52,7 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name, price }),
+        body: JSON.stringify({ name, price, category }),
       });
 
       const data = await response.json();
@@ -95,6 +96,7 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
         setProducts,
         addProduct,
         deleteProduct,
+        totalPages,
         fetchProducts,
       }}
     >

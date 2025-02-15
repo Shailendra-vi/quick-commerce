@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { verifyToken } from "@/utils/auth";
+import { decodeToken } from "@/utils/auth";
 import { User } from "@/types/type";
 import {
   Box,
@@ -47,7 +47,7 @@ export default function SignupPage() {
         throw new Error(data.message);
       }
       setToken(data.token);
-      const user = verifyToken(data.token) as User;
+      const user = decodeToken(data.token) as User;
       setUser(user);
       router.push("/");
     } catch (err: any) {

@@ -5,10 +5,18 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Delivery from "@/components/Delivery";
 import Customer from "@/components/Customer";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  CircularProgress,
+} from "@mui/material";
 
 export default function Home() {
   const router = useRouter();
-  const { user, token, setUser } = useAuth();
+  const { user, token, setUser, logout } = useAuth();
 
   useEffect(() => {
     if (!token) {
@@ -35,7 +43,26 @@ export default function Home() {
     }
   }, []);
 
-  if (!user || !user.role) return <div>Loading...</div>;
+  if (!user || !user.role || !user.name)
+    return (
+      <Box display="flex" justifyContent="center" mt={10}>
+        <CircularProgress />
+      </Box>
+    );
 
-  return user.role === "customer" ? <Customer /> : <Delivery />;
+  return (
+    <div>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Welcome, {user?.name?.toUpperCase()}
+          </Typography>
+          <Button color="inherit" onClick={logout}>
+            Logout
+          </Button>
+        </Toolbar>
+      </AppBar>
+      {user.role === "customer" ? <Customer /> : <Delivery />}
+    </div>
+  );
 }

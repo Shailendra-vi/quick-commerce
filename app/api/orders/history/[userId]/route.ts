@@ -22,12 +22,12 @@ export async function GET(
       orders = await Orders.find({
         customerId: userId,
         status: "Delivered",
-      });
+      }).populate("customerId", "name email").populate("productId", "name price");
     } else {
       orders = await Orders.find({
         deliveryPartnerId: userId,
         status: "Delivered",
-      });
+      }).populate("customerId", "name email").populate("productId", "name price");
     }
 
     return NextResponse.json(orders, { status: 200 });

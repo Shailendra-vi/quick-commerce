@@ -23,12 +23,14 @@ interface ProductContext {
   loading: boolean;
   products: Product[] | undefined;
   setProducts: React.Dispatch<React.SetStateAction<Product[] | undefined>>;
-  addProduct: (name: string, price: Number) => Promise<void>;
+  addProduct: (name: string, price: Number, category: string) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
-  fetchProducts: () => {};
+  totalPages: number,
+  fetchProducts: (page?: number | undefined) => Promise<void>;
 }
 
 interface Order {
+  [x: string]: any;
   _id: string;
   quantity: number;
   location: string;

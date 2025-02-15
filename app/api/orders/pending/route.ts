@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const pendingProducts = await Orders.find({
       status: { $ne: "Delivered" },
       deliveryPartnerId: userId
-    });
+    }).populate("customerId", "name email").populate("productId", "name price");
 
     return NextResponse.json(pendingProducts, { status: 200 });
   } catch (error) {

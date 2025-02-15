@@ -40,10 +40,14 @@ export async function POST(request: NextRequest) {
     });
 
     await newOrder.save();
-    const io: SocketIOServer = getIo();
-    io.to(newOrder.deliveryPartnerId.toString()).emit("newOrder", newOrder);
+    const populatedOrder = await Order.findById(newOrder._id)
+      .populate("customerId", "name email")
+      .populate("productId", "name price");
 
-    return NextResponse.json(newOrder, { status: 201 });
+    const io: SocketIOServer = getIo();
+    io.to(populatedOrder.deliveryPartnerId.toString()).emit("newOrder", populatedOrder);
+
+    return NextResponse.json(populatedOrder, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { message: "Internal server error", error: (error as Error).message },
