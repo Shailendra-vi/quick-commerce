@@ -21,12 +21,14 @@ interface Product {
 
 interface ProductContext {
   loading: boolean;
+  aiRecommendationLoading: boolean;
   products: Product[] | undefined;
   setProducts: React.Dispatch<React.SetStateAction<Product[] | undefined>>;
   addProduct: (name: string, price: Number, category: string) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
   totalPages: number,
   fetchProducts: (page?: number | undefined) => Promise<void>;
+  getAIRecommendations:  () => {};
 }
 
 interface Order {

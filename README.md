@@ -8,6 +8,7 @@ Make sure you have the following installed on your machine:
 - [Node.js](https://nodejs.org/) (Recommended: 18 or later version)
 - [Git](https://git-scm.com/)
 - [VS Code](https://code.visualstudio.com/) or any other code editor
+- Refer .env.example to set up environment variables
 
 ## Clone the Repository
 Open your terminal or command prompt and run:
@@ -63,3 +64,13 @@ yarn start
 ## Authentication (SignIn)
 1. Open `http://localhost:3000/signin`
 2. Enter the required details and submit.
+
+
+
+## Configure AI Model
+Configure .env.local using .env.example as a reference for setting up the AI model.
+- If using Gemini, set the Gemini API key in the .env file.
+- If using Ollama, ensure Ollama is installed and download the required model. Then, configure the Ollama model in the .env file.
+
+### Note: Before using Ollama, install it on your system and ensure the required model is downloaded.
+

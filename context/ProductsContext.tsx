@@ -16,9 +16,10 @@ const ProductsContext = createContext<ProductContext | undefined>(undefined);
 export const ProductsProvider = ({ children }: { children: ReactNode }) => {
   const [products, setProducts] = useState<Product[] | undefined>();
   const [loading, setLoading] = useState<boolean>(false);
+  const [aiRecommendationLoading, setAIRecommendationLoading] = useState<boolean>(false);
   const [totalPages, setTotalPages] = useState<number>(1);
 
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const router = useRouter();
 
@@ -38,7 +39,24 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   };
+  const getAIRecommendations = async () => {
+    setAIRecommendationLoading(true)
+    try {
+      // setTimeout(() => {
+      //   setAIRecommendationLoading(false)
+      // }, 5000)
+      const response = await fetch(`/api/recommend/${user?._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
 
+      if (response.ok) setProducts(data.recommendedProducts || []);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }finally{
+      setAIRecommendationLoading(false)
+    }
+  };
   const addProduct = async (name: string, price: Number, category: string) => {
     if (!token) {
       router.push("/signin");
@@ -88,6 +106,7 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+
   return (
     <ProductsContext.Provider
       value={{
@@ -98,6 +117,8 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
         deleteProduct,
         totalPages,
         fetchProducts,
+        aiRecommendationLoading,
+        getAIRecommendations
       }}
     >
       {children}

@@ -61,7 +61,7 @@ const CustomerOrderHistory = () => {
           textAlign="center"
           gutterBottom
         >
-          Past Orders
+          {user?.role === "customer" ? "Orders History" : "Delivered Orders"}
         </Typography>
         <Divider sx={{ mb: 3 }} />
         <Grid container spacing={3}>
@@ -76,9 +76,9 @@ const CustomerOrderHistory = () => {
                     <Box
                       sx={{ display: "flex", flexDirection: "column", gap: 1 }}
                     >
-                      <Typography variant="body1">
+                      {order.productId && <Typography variant="body1">
                         {order.productId.name} - ${order.productId.price}
-                      </Typography>
+                      </Typography>}
                       {user?.role !== "customer" && (
                         <>
                           <Typography variant="body1">

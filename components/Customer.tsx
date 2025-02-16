@@ -35,19 +35,29 @@ const statusColors: {
 };
 
 const Customer = () => {
-  const { loading, products, totalPages, fetchProducts } = useProducts();
+  const {
+    loading,
+    aiRecommendationLoading,
+    products,
+    totalPages,
+    fetchProducts,
+    getAIRecommendations,
+  } = useProducts();
   const { token, user } = useAuth();
   const [orderDetails, setOrderDetails] = useState<{ [key: string]: number }>(
     {}
   );
+
   const [location, setLocation] = useState("");
   const [orderHistory, setOrderHistory] = useState<Order[]>([]);
   const [page, setPage] = useState(1);
+  const [isAIActive, setIsAIActive] = useState<boolean>(false);
+
   const router = useRouter();
 
   useEffect(() => {
     if (token) {
-      fetchProducts(page);
+      isAIActive ? getAIRecommendations() : fetchProducts(page);
     }
   }, [token, page]);
 
@@ -81,7 +91,7 @@ const Customer = () => {
       const data = await response.json();
       if (response.ok) setOrderHistory(data.orders || []);
     } catch (error) {
-      console.error(error);
+      toast.error((error as Error).message);
     }
   };
 
@@ -133,12 +143,6 @@ const Customer = () => {
     setPage(value);
   };
 
-  if (loading)
-    return (
-      <Box display="flex" justifyContent="center" mt={10}>
-        <CircularProgress />
-      </Box>
-    );
 
   return (
     <Container maxWidth="xl" sx={{ py: 8 }}>
@@ -153,60 +157,84 @@ const Customer = () => {
             >
               Products
             </Typography>
-            <TextField
-              fullWidth
-              label="Enter your location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              sx={{ mb: 4 }}
-            />
-            <Grid container spacing={3}>
-              {products?.map((product) => (
-                <Grid item xs={12} sm={6} md={4} key={product._id}>
-                  <Card elevation={4} sx={{ borderRadius: 2 }}>
-                    <CardContent>
-                      <Typography variant="h6" fontWeight="bold">
-                        {product.name}
-                      </Typography>
-                      <Typography color="textSecondary">
-                        ${product.price}
-                      </Typography>
-                      <TextField
-                        fullWidth
-                        type="number"
-                        label="Quantity"
-                        variant="outlined"
-                        sx={{ mt: 2 }}
-                        onChange={(e) =>
-                          handleQuantityChange(
-                            product._id,
-                            Number(e.target.value)
-                          )
-                        }
-                      />
-                    </CardContent>
-                    <CardActions>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        color="primary"
-                        onClick={() => placeOrder(product._id)}
-                      >
-                        Order
-                      </Button>
-                    </CardActions>
-                  </Card>
-                </Grid>
-              ))}
-              <Box display="flex" justifyContent="center" mt={4}>
-                <Pagination
-                  count={totalPages}
-                  page={page}
-                  onChange={handlePageChange}
-                  color="primary"
-                />
+            <div className="flex gap-4">
+              <TextField
+                fullWidth
+                label="Enter your location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                sx={{ mb: 4 }}
+                className="flex-[4] mb-0"
+              />
+              <Button
+                variant={isAIActive ? "contained" : "outlined"}
+                color="error"
+                disabled={aiRecommendationLoading}
+                onClick={() => {
+                  isAIActive ? fetchProducts(page) : getAIRecommendations();
+                  setIsAIActive(!isAIActive);
+                }}
+                className="flex-[1] p-0"
+              >
+                AI Recommendations
+              </Button>
+            </div>
+
+            {loading || aiRecommendationLoading ? (
+              <Box display="flex" justifyContent="center" mt={10}>
+                <CircularProgress />
               </Box>
-            </Grid>
+            ) : (
+              <Grid container spacing={3} className="mt-4">
+                {products?.map((product) => (
+                  <Grid item xs={12} sm={6} md={4} key={product._id}>
+                    <Card elevation={4} sx={{ borderRadius: 2 }}>
+                      <CardContent>
+                        <Typography variant="h6" fontWeight="bold">
+                          {product.name}
+                        </Typography>
+                        <Typography color="textSecondary">
+                          ${product.price}
+                        </Typography>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Quantity"
+                          variant="outlined"
+                          sx={{ mt: 2 }}
+                          onChange={(e) =>
+                            handleQuantityChange(
+                              product._id,
+                              Number(e.target.value)
+                            )
+                          }
+                        />
+                      </CardContent>
+                      <CardActions>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          color="primary"
+                          onClick={() => placeOrder(product._id)}
+                        >
+                          Order
+                        </Button>
+                      </CardActions>
+                    </Card>
+                  </Grid>
+                ))}
+                {!isAIActive && (
+                  <Box display="flex" justifyContent="center" mt={4}>
+                    <Pagination
+                      count={totalPages}
+                      page={page}
+                      onChange={handlePageChange}
+                      color="primary"
+                    />
+                  </Box>
+                )}
+              </Grid>
+            )}
           </Paper>
         </div>
         <Paper
@@ -220,7 +248,7 @@ const Customer = () => {
             color="secondary"
             onClick={() => router.push("/history")}
           >
-            View Past Orders
+            Orders History
           </Button>
           <Grid container spacing={3} className="mt-4">
             {orderHistory?.map((order) => (
@@ -230,9 +258,11 @@ const Customer = () => {
                     <Typography variant="h6">
                       Order #{order._id.slice(-6).toUpperCase()}
                     </Typography>
-                    <Typography>
-                      {order.productId.name} - ${order.productId.price}
-                    </Typography>
+                    {order.productId && (
+                      <Typography>
+                        {order.productId.name} - ${order.productId.price}
+                      </Typography>
+                    )}
                     <Typography>Quantity: {order.quantity}</Typography>
                     <Typography>Location: {order.location}</Typography>
                     <Chip

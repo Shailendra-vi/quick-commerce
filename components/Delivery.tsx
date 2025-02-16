@@ -231,7 +231,7 @@ function Delivery() {
                 color="secondary"
                 onClick={() => router.push("/history")}
               >
-                View Order History
+                Delivered Orders
               </Button>
               <Grid container spacing={3} className="mt-4">
                 {orders.length > 0 ? (
