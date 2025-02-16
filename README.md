@@ -74,3 +74,5 @@ Configure .env.local using .env.example as a reference for setting up the AI mod
 
 ### Note: Before using Ollama, install it on your system and ensure the required model is downloaded.
 
+## Check it out [Quick Commerce](https://salmon-pebble-0abc82500.4.azurestaticapps.net/)
+
