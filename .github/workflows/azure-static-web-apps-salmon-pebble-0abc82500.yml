@@ -32,6 +32,14 @@ jobs:
                const coredemo = require('@actions/core')
                return await coredemo.getIDToken()
            result-encoding: string
+      - name: Create .env File
+        run: |
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env.local
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env.local
+          echo "REFRESH_SECRET=${{ secrets.REFRESH_SECRET }}" >> .env.local
+          echo "OLLAMA_MODEL=${{ secrets.OLLAMA_MODEL }}" >> .env.local
+          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env.local
+          echo "MODEL=${{ secrets.MODEL }}" >> .env.local
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
