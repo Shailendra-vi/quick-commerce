@@ -5,13 +5,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getIo } from "@/lib/socket";
 import { Server as SocketIOServer } from "socket.io";
 
-
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  segmentData: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { id } = await segmentData.params;
     const user = getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

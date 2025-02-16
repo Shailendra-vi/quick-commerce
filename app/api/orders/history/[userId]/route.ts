@@ -4,10 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  segmentData: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { userId } = await params;
+    const { userId } = await segmentData.params;
     const user = await User.findById(userId);
 
     if (!user) {
@@ -22,12 +22,16 @@ export async function GET(
       orders = await Orders.find({
         customerId: userId,
         status: "Delivered",
-      }).populate("customerId", "name email").populate("productId", "name price");
+      })
+        .populate("customerId", "name email")
+        .populate("productId", "name price");
     } else {
       orders = await Orders.find({
         deliveryPartnerId: userId,
         status: "Delivered",
-      }).populate("customerId", "name email").populate("productId", "name price");
+      })
+        .populate("customerId", "name email")
+        .populate("productId", "name price");
     }
 
     return NextResponse.json(orders, { status: 200 });
